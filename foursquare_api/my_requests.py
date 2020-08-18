@@ -1,11 +1,12 @@
 import requests
-from logger import Logger
+import logging
+
+logger = logging.getLogger("fq_api.requests")
 
 class Requests(object):
 
     _client_id = None
     _client_secret = None
-    _logger = Logger()
     _status = None
 
     def config(self, client_id, client_secret):
@@ -30,9 +31,9 @@ class Requests(object):
 
     def validate(self, response):
         if response['meta']['code'] != 200:
-            self._logger.log(Logger.ERROR, "GET Request Error Code " + str(response['meta']['code']))
-            self._logger.log(Logger.ERROR, "Error type: " + str(response['meta']['errorType']))
-            self._logger.log(Logger.ERROR, "Error detail: " + str(response['meta']['errorDetail']))
+            logger.error("GET Request Error Code " + str(response['meta']['code']))
+            logger.error("Error type: " + str(response['meta']['errorType']))
+            logger.error("Error detail: " + str(response['meta']['errorDetail']))
             return False
 
         return True

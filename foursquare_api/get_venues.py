@@ -1,4 +1,4 @@
-from logger import Logger
+import logging
 from my_requests import Requests
 import os
 import time
@@ -25,7 +25,10 @@ ACTIVE_KEY = 0
 if not os.path.exists(DATA_DIR):
     os.mkdir(DATA_DIR)
 
-logger = Logger()
+logging.basicConfig()
+logger = logging.getLogger("fq_api")
+logger.setLevel(logging.INFO)
+
 req = Requests()
 req.config(client_id=API_KEYS[ACTIVE_KEY][0],
            client_secret=API_KEYS[ACTIVE_KEY][1])
@@ -37,9 +40,9 @@ skipped = 0
 def waitToNextMidnight():
     t = time.localtime()
     t = time.mktime(t[:3] + (0, 0, 0) + t[6:])
-    logger.log(Logger.INFO, 'Sleeping until midnight of tomorrow... ')
+    logger.info('Sleeping until midnight of tomorrow... ')
     time.sleep(t + 24*3600 - time.time() + 10)
-    logger.log(Logger.INFO, 'Sleeping until midnight of tomorrow... WOKE UP!')
+    logger.info('Sleeping until midnight of tomorrow... WOKE UP!')
 
 
 def fetch_venues():
@@ -53,7 +56,7 @@ def fetch_venues():
 
         if os.path.isfile(DATA_DIR + file) or foursquare_id in DEAD_VENUES:
             skipped += 1
-            logger.log_dyn(Logger.INFO, 'Venue ' + foursquare_id + ' already retrieved or dead' +
+            logger.info('Venue ' + foursquare_id + ' already retrieved or dead' +
                            ' (Skipped = ' + str(skipped) + ')!')
             continue
 
@@ -69,13 +72,13 @@ def fetch_venues():
                 ACTIVE_KEY = (ACTIVE_KEY + 1) % len(API_KEYS)
                 req.config(client_id=API_KEYS[ACTIVE_KEY][0],
                            client_secret=API_KEYS[ACTIVE_KEY][1])
-                logger.log(Logger.WARNING, 'Active API key changed to ' +
+                logger.warning('Active API key changed to ' +
                            str(ACTIVE_KEY) + '.')
                 time.sleep(60)
 
             if ACTIVE_KEY == 0:  # All keys are done, sleep until next day
-                logger.log(Logger.WARNING, 'All API keys have reached the calls limit!')
-                logger.log(Logger.INFO, 'Summary: Fetched = ' + str(fetched) +
+                logger.warning('All API keys have reached the calls limit!')
+                logger.info('Summary: Fetched = ' + str(fetched) +
                            '\tSkipped = ' + str(skipped))
                 waitToNextMidnight()
 
@@ -84,11 +87,11 @@ def fetch_venues():
             venue_fetched = req.validate(rsp)
 
         if venue_fetched:
-            logger.log(Logger.INFO, 'Retrieving venue ' + foursquare_id + '.')
+            logger.info('Retrieving venue ' + foursquare_id + '.')
             with open(DATA_DIR + file, 'w') as outfile:
                 json.dump(rsp, outfile)
         else:
-            logger.log(Logger.WARNING, 'Venue ' + foursquare_id + ' skipped (invalid ID or something unexpected).')
+            logger.warning('Venue ' + foursquare_id + ' skipped (invalid ID or something unexpected).')
 
         fetched += 1 if venue_fetched else 0
         time.sleep(2)
@@ -98,6 +101,6 @@ while True:
         fetch_venues()
         break
     except Exception as e:
-        logger.log(Logger.ERROR, str(e))
-        logger.log(Logger.WARNING, 'Waiting 60 seconds to restart...')
+        logger.error(str(e))
+        logger.warning('Waiting 60 seconds to restart...')
         time.sleep(60)
