@@ -81,7 +81,7 @@ def fetch_venues():
 
             rsp = req.get(VENUE_ENDPOINT.replace('VENUE_ID', foursquare_id),
                           named_params=['v=' + VERSION])
-            venue_fecthed = req.validate(rsp)
+            venue_fetched = req.validate(rsp)
 
         if venue_fetched:
             logger.log(Logger.INFO, 'Retrieving venue ' + foursquare_id + '.')
